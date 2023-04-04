@@ -162,7 +162,7 @@ export class TestFileDiscoverer extends vscode.Disposable {
       uri.fsPath.startsWith(x),
     )
     let name
-
+    let projectId
     if (workspacePath) {
       if (!this.workspaceCommonPrefix.has(workspacePath)) {
         const path = uri.fsPath.split(sep)
@@ -191,7 +191,7 @@ export class TestFileDiscoverer extends vscode.Disposable {
       }
 
       name = uri.fsPath.substring(workspacePrefix.length)
-      // projectId = workspacePath.split(sep).pop()
+      projectId = workspacePath.split(sep).pop()
     }
     else {
       name = uri.fsPath.split(sep).pop()!
@@ -200,13 +200,18 @@ export class TestFileDiscoverer extends vscode.Disposable {
     const file = controller.createTestItem(uri.toString(), name, uri)
     workspacePath && this.workspaceItems.get(workspacePath)!.add(file)
 
-    const projectId = workspacePath?.split('/').pop() || 'hiho'
-    let existingItem = controller.items.get(projectId)
-    if (!existingItem)
-      existingItem = controller.createTestItem(projectId, projectId)
+    if (projectId) {
+      let existingItem = controller.items.get(projectId)
+      if (!existingItem)
+        existingItem = controller.createTestItem(projectId, projectId)
 
-    existingItem.children.add(file)
-    controller.items.add(existingItem)
+      existingItem.children.add(file)
+      controller.items.add(existingItem)
+    }
+    else {
+      controller.items.add(file)
+    }
+
     const data = new TestFile(file)
     WEAKMAP_TEST_DATA.set(file, data)
     this.pathToFileItem.set(uri.fsPath, data)
